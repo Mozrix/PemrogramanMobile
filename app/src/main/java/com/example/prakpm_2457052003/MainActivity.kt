@@ -79,7 +79,7 @@ fun Greeting() {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
                     contentDescription = "Fav Icons",
-                    tint = if (isFavorite) Color.Red else Color.Black
+                    tint = if (isFavorite) Color.Red else Color.Blue
                 )
             }
             Column(modifier = Modifier.padding(top = 40.dp)) {
