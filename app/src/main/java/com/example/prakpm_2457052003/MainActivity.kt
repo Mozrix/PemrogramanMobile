@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,9 +17,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.LineHeightStyle
 import model.GameGear
 import model.Source
 import com.example.prakpm_2457052003.ui.theme.PrakPM_2457052003Theme
@@ -39,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting() {
-
+    var isFavorite by remember { mutableStateOf(false) }
     val GameGear = Source.dummyGameGear[2]
     val GameGear2 = Source.dummyGameGear[1]
     val GameGear3 = Source.dummyGameGear[0]
@@ -51,11 +66,22 @@ fun Greeting() {
     ) {
 
         Row() {
-            Image(
-                painter = painterResource(id = R.drawable.keyboard),
-                contentDescription = "Gambar ${GameGear.nama}",
-                modifier = Modifier.size(200.dp)
-            )
+            Box() {
+                Image(
+                    painter = painterResource(id = R.drawable.keyboard),
+                    contentDescription = "Gambar ${GameGear.nama}",
+                    modifier = Modifier.size(200.dp)
+                )
+                IconButton(
+                    onClick = { isFavorite = !isFavorite },
+                    modifier = Modifier.padding(8.dp).align(Alignment.BottomEnd)
+                ) { }
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                    contentDescription = "Fav Icons",
+                    tint = if (isFavorite) Color.Red else Color.Black
+                )
+            }
             Column(modifier = Modifier.padding(top = 40.dp)) {
                 Text(text = "Nama: ${GameGear.nama}")
                 Text(text = "Deskripsi: ${GameGear.deskripsi}")
@@ -105,6 +131,8 @@ fun Greeting() {
         }
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
