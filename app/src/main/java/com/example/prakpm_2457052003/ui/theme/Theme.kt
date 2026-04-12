@@ -33,6 +33,15 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+private val AppColorScheme = lightColorScheme(
+    primary = OrangePrimary,
+    secondary = OrangeSecondary,
+    background = CreamBackground,
+    surface = CardSurface,
+    onPrimary = OnPrimaryText
+)
+
+
 @Composable
 fun PrakPM_2457052003Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -55,4 +64,11 @@ fun PrakPM_2457052003Theme(
         typography = Typography,
         content = content
     )
+
+    MaterialTheme(
+        colorScheme = AppColorScheme,
+        typography = Typography,
+        content = content
+    )
+
 }

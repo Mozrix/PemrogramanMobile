@@ -62,13 +62,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PrakPM_2457052003Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting()
                 }
             }
         }
     }
-}
+
 
 @Composable
 fun Greeting() {
@@ -150,7 +149,7 @@ fun DetailScreen(gear: GameGear){
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -215,10 +214,6 @@ fun DetailScreen(gear: GameGear){
         }
     }
 }
-
-
-
-
 
 @Preview(showBackground = true)
 @Composable
