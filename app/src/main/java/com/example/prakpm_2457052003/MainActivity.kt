@@ -1,7 +1,5 @@
 package com.example.prakpm_2457052003
 
-import android.content.ClipData
-import android.media.RouteListingPreference
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,19 +9,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -37,24 +27,39 @@ import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.example.prakpm_2457052003.ui.theme.PrakPM_2457052003Theme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import model.GameGear
 import model.Source
-import com.example.prakpm_2457052003.ui.theme.PrakPM_2457052003Theme
-import org.intellij.lang.annotations.JdkConstants
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,17 +67,34 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PrakPM_2457052003Theme {
-                    Greeting()
+                val navController = rememberNavController()
+                NavHost(navController = navController, startDestination = "home") {
+                    composable("home") {
+                        Greeting(onDetailClick = { gearNama ->
+                            navController.navigate("detail/$gearNama")
+                        })
+                    }
+                    composable(
+                        route = "detail/{gearNama}"
+                    ) { backStackEntry ->
+                        val gearNama = backStackEntry.arguments?.getString("gearNama")
+                        val gear =
+                            (Source.reccomendGear + Source.dummyGameGear).find { it.nama == gearNama }
+                        if (gear != null) {
+                            DetailProduk(
+                                gear = gear,
+                                onBackClick = { navController.popBackStack() })
+                        }
+                    }
                 }
             }
         }
     }
+}
 
 
 @Composable
-fun Greeting() {
-    val gameGearList = Source.dummyGameGear
-
+fun Greeting(onDetailClick: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -90,8 +112,8 @@ fun Greeting() {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(Source.reccomendGear) { GameGear ->
-                    GameGearItems(gear = GameGear)
+                items(Source.reccomendGear) { gear: GameGear ->
+                    GameGearItems(gear = gear, onDetailClick = onDetailClick)
                 }
             }
             Spacer(modifier = Modifier.height(30.dp))
@@ -102,20 +124,22 @@ fun Greeting() {
                 modifier = Modifier.padding(8.dp)
             )
         }
-        items(Source.dummyGameGear){
-            GameGear ->
-            DetailScreen(gear = GameGear)
+        items(Source.dummyGameGear) { gear: GameGear ->
+            DetailScreen(gear = gear)
         }
     }
 
 }
 
 @Composable
-fun GameGearItems(gear: GameGear) {
+fun GameGearItems(gear: GameGear, onDetailClick: (String) -> Unit) {
     Card(
         modifier = Modifier.width(160.dp),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        onClick = {
+            onDetailClick(gear.nama)
+        }
     ) {
         Column {
             Image(
@@ -144,8 +168,11 @@ fun GameGearItems(gear: GameGear) {
 }
 
 @Composable
-fun DetailScreen(gear: GameGear){
+fun DetailScreen(gear: GameGear) {
     var isFavorite by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -155,7 +182,11 @@ fun DetailScreen(gear: GameGear){
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) { // Tambah padding agar konten tidak mepet ke tepi card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Box {
                 Image(
                     painter = painterResource(id = gear.imageRes),
@@ -170,12 +201,11 @@ fun DetailScreen(gear: GameGear){
                     onClick = { isFavorite = !isFavorite },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
                 ) {
                     Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                        imageVector = if (isFavorite) Icons.Outlined.Favorite else Icons.Outlined.Favorite,
                         contentDescription = "Favorite Icon",
-                        tint = if (isFavorite) Color.Red else Color.White
+                        tint = if (isFavorite) Color.Red else Color.Black
                     )
                 }
             }
@@ -206,12 +236,38 @@ fun DetailScreen(gear: GameGear){
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {},
-                modifier = Modifier.fillMaxWidth()
+                onClick = {
+                    coroutineScope.launch {
+                        isLoading = true
+                        delay(200)
+                        snackbarHostState.showSnackbar(
+                            "Pesanan ${gear.nama} berhasil diproses!"
+                        )
+                        isLoading = false
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
             ) {
-                Text("Lihat List")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Memproses...")
+                } else {
+                    Text("Pesan Sekarang")
+                }
             }
         }
+    }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -219,5 +275,6 @@ fun DetailScreen(gear: GameGear){
 @Composable
 fun GreetingPreview() {
     PrakPM_2457052003Theme {
+        Greeting(onDetailClick = {})
     }
 }
